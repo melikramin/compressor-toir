@@ -18,8 +18,11 @@ ok()  { printf '%s✔%s %s\n' "$G" "$N" "$*"; }
 err() { printf '%sОшибка:%s %s\n' "$R" "$N" "$*" >&2; exit 1; }
 
 # Скрипт могли запустить через «curl | bash» — тогда stdin занят пайпом и
-# setup.sh не сможет ничего спросить. Возвращаем себе терминал.
-[ -t 0 ] || { [ -e /dev/tty ] && exec </dev/tty; }
+# setup.sh не сможет ничего спросить. Возвращаем себе терминал, но только
+# если он вправду открывается: под cron и в CI /dev/tty есть, а толку нет.
+if [ ! -t 0 ] && [ -c /dev/tty ] && (: </dev/tty) 2>/dev/null; then
+    exec </dev/tty
+fi
 
 printf '\n%scompressor-toir — установка%s\n\n' "$B" "$N"
 
