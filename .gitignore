@@ -1,0 +1,11 @@
+# Env & secrets — НИКОГДА не коммитим
+.env
+*.env
+!.env.example
+
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Внутренние заметки по разработке — в публичный репозиторий не идут
+CLAUDE.md
