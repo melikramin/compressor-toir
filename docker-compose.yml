@@ -15,9 +15,9 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-toir}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD не задан}
       POSTGRES_DB: ${POSTGRES_DB:-toir}
-    # PG_BIND=127.0.0.1 — 1С на этой же машине; 0.0.0.0 — 1С в LAN.
-    # В интернет этот порт не выставлять: у службы нет ни аутентификации по IP,
-    # ни TLS-сертификата, она рассчитана на закрытый периметр.
+    # PG_BIND=0.0.0.0 — 1С подключается с других машин (сеть или интернет);
+    # 127.0.0.1 — 1С на этом же сервере. При 0.0.0.0 защита только паролем,
+    # трафик не шифруется — по возможности ограничьте порт файрволом.
     ports: ["${PG_BIND:-127.0.0.1}:${PG_PORT:-5432}:5432"]
     volumes: [pgdata:/var/lib/postgresql/data]
     restart: unless-stopped

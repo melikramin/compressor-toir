@@ -139,15 +139,18 @@ install() {
     done
 
     say ""
-    say "Где стоит 1С:ТОиР?"
-    say "  1) на этом же сервере"
-    say "  2) на другой машине в сети"
+    say "Откуда будет подключаться 1С:ТОиР?"
+    say "  1) с других машин — из сети или через интернет (доступ с любого адреса)"
+    say "  2) только с этого же сервера"
     local choice; ask choice "Выбор" "1"
     if [ "$choice" = "2" ]; then
-        bind=0.0.0.0
-        warn "порт Postgres будет доступен по сети — ограничьте его файрволом"
-    else
         bind=127.0.0.1
+    else
+        bind=0.0.0.0
+        warn "Порт Postgres будет открыт для всех адресов."
+        say  "  Защита — только пароль, и он идёт по сети без шифрования."
+        say  "  Если у 1С постоянный IP, сузьте доступ:"
+        say  "    ufw allow OpenSSH && ufw allow from IP_1C to any port PORT proto tcp && ufw enable"
     fi
 
     while :; do
