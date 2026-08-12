@@ -14,7 +14,6 @@ com.geotek.app ──HTTPS──> [sync] ──> [postgres] <──локаль�
 ```
 
 - Установка и передача данных интегратору — [`INSTALL.md`](INSTALL.md).
-- Правила разработки и контракт — [`CLAUDE.md`](CLAUDE.md).
 
 ## Быстрый старт
 
@@ -74,7 +73,8 @@ docker compose exec postgres psql -U toir -d toir -c "SELECT * FROM sync_state;"
 docker compose run --rm --no-deps sync sh -c "pip install -q pytest && python -m pytest tests -q"
 ```
 
-Покрыты только мэппинг строки и защита от стирания таблицы — см. `CLAUDE.md`.
+Покрыты только мэппинг строки API → строки БД и защита от стирания таблицы на
+пустом ответе. Остальное тестами намеренно не покрыто.
 
 ## Устройство
 
