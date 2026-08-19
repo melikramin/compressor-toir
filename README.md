@@ -67,6 +67,11 @@ docker compose exec -e PGPASSWORD=$TOIR_1C_PASSWORD postgres \
 docker compose exec postgres psql -U toir -d toir -c "SELECT * FROM sync_state;"
 ```
 
+## Удаление
+
+`./setup.sh` → пункт `8` — снимает контейнеры, удаляет том с базой и собранный
+образ, по желанию `.env` и сам каталог проекта. Данные не восстановить.
+
 ## Тесты
 
 ```bash

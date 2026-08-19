@@ -233,6 +233,34 @@ change_base() {
     wait_first_cycle || true
 }
 
+uninstall() {
+    head_ "Удаление службы"
+    warn "Удалятся контейнеры, том с базой и собранный образ — данные не вернуть."
+    say  "1С:ТОиР после этого читать будет нечего."
+    local yn dir; ask yn "Удалить? (yes/no)" "no"
+    [ "$yn" = "yes" ] || { say "Отмена."; return; }
+
+    docker compose down -v --rmi local || true
+    ok "контейнеры, том с данными и образ удалены"
+
+    ask yn "Удалить .env с паролями? (yes/no)" "yes"
+    if [ "$yn" = "yes" ]; then
+        rm -f .env .env.backup.*
+        ok ".env удалён"
+    fi
+
+    dir=$(pwd)
+    if [ -f "$dir/setup.sh" ] && [ "$dir" != "/" ]; then
+        ask yn "Удалить каталог проекта $dir? (yes/no)" "no"
+        if [ "$yn" = "yes" ]; then
+            # exec: дальше читать скрипт неоткуда — своего файла у нас не будет.
+            exec bash -c 'cd / && rm -rf -- "$1" && printf "Готово, каталог %s удалён.\n" "$1"' _ "$dir"
+        fi
+    fi
+    ok "Готово. Каталог оставлен: $dir"
+    exit 0
+}
+
 menu() {
     while :; do
         head_ "compressor-toir"
@@ -243,6 +271,7 @@ menu() {
         say "  5) Перезапустить службу"
         say "  6) Последние строки журнала"
         say "  7) Переустановить с нуля"
+        say "  8) Удалить службу с сервера"
         say "  0) Выход"
         say ""
         local choice; ask choice "Выбор" "1"
@@ -254,6 +283,7 @@ menu() {
             5) docker compose up -d >/dev/null && ok "перезапущено"; wait_first_cycle || true ;;
             6) say ""; docker compose logs --tail 30 sync ;;
             7) install || true ;;
+            8) uninstall ;;
             0) exit 0 ;;
             *) err "нет такого пункта" ;;
         esac
