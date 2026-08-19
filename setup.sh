@@ -68,6 +68,14 @@ require_docker() {
     docker info >/dev/null 2>&1 || { err "Нет доступа к Docker. Запускайте от root или добавьте пользователя в группу docker."; exit 1; }
 }
 
+# Порт держит наш же postgres от прошлой установки — при переустановке контейнер
+# пересоздаётся на этом же порту, так что занятым его считать нельзя.
+port_busy() {  # port_busy ПОРТ
+    ss -tln 2>/dev/null | grep -q ":$1 " || return 1
+    docker compose port postgres 5432 2>/dev/null | grep -q ":$1$" && return 1
+    return 0
+}
+
 # Адрес платформы нужен до /api, но из документации обычно копируют весь URL
 # эндпоинта — без этого запрос уходит в /integration/toir-1c дважды и ловит 404.
 norm_base() {  # norm_base АДРЕС
@@ -168,7 +176,7 @@ install() {
 
     while :; do
         ask port "Порт Postgres" "5432"
-        if ss -tln 2>/dev/null | grep -q ":$port "; then
+        if port_busy "$port"; then
             warn "порт $port уже занят на этом сервере"
         else
             break
