@@ -68,6 +68,17 @@ require_docker() {
     docker info >/dev/null 2>&1 || { err "Нет доступа к Docker. Запускайте от root или добавьте пользователя в группу docker."; exit 1; }
 }
 
+# Адрес платформы нужен до /api, но из документации обычно копируют весь URL
+# эндпоинта — без этого запрос уходит в /integration/toir-1c дважды и ловит 404.
+norm_base() {  # norm_base АДРЕС
+    local b
+    b=$(printf '%s' "$1" | tr -d '[:space:]')
+    b=${b%/}; b=${b%/integration/toir-1c}; b=${b%/}
+    case "$b" in http://*|https://*) ;; *) b="https://$b" ;; esac
+    case "${b#*://}" in */*) ;; *) b="$b/api" ;; esac
+    printf '%s' "$b"
+}
+
 # Проверяем ключ до записи в .env: опечатка не должна ронять рабочую службу.
 check_key() {  # check_key БАЗА КЛЮЧ
     local code
@@ -78,6 +89,7 @@ check_key() {  # check_key БАЗА КЛЮЧ
         200) ok "платформа ответила, ключ принят"; return 0 ;;
         401|403) err "платформа отвергла ключ (HTTP $code)"; return 1 ;;
         000) err "нет связи с $1 — проверьте интернет и адрес"; return 1 ;;
+        404) err "на $1 нет эндпоинта интеграции — проверьте адрес платформы"; return 1 ;;
         *) err "платформа ответила HTTP $code"; return 1 ;;
     esac
 }
@@ -130,7 +142,8 @@ install() {
     local base key bind port
     say ""
     ask base "Адрес платформы" "https://com.geotek.app/api"
-    base=${base%/}
+    base=$(norm_base "$base")
+    say "Адрес: $base"
     while :; do
         ask key "API-ключ (выдаём мы)"
         check_key "$base" "$key" && break
@@ -211,7 +224,8 @@ change_base() {
     local base key; key=$(get_env API_KEY)
     say "Текущий: $(get_env API_BASE)"
     ask base "Новый адрес" "https://com.geotek.app/api"
-    base=${base%/}
+    base=$(norm_base "$base")
+    say "Адрес: $base"
     check_key "$base" "$key" || { warn "адрес не записан, оставил прежний"; return; }
     set_env API_BASE "$base"
     docker compose up -d sync >/dev/null
