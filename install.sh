@@ -70,5 +70,5 @@ else
 fi
 
 cd "$DIR"
-chmod +x setup.sh status.sh
+chmod +x setup.sh status.sh certgen.sh
 exec ./setup.sh

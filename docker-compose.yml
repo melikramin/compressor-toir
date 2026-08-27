@@ -15,11 +15,16 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-toir}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD не задан}
       POSTGRES_DB: ${POSTGRES_DB:-toir}
+    # TLS до 1С. Сертификат самоподписанный, создаёт certgen.sh — без файлов
+    # в certs/ Postgres с ssl=on не стартует.
+    command: ["-c", "ssl=on",
+              "-c", "ssl_cert_file=/certs/server.crt",
+              "-c", "ssl_key_file=/certs/server.key"]
     # PG_BIND=0.0.0.0 — 1С подключается с других машин (сеть или интернет);
-    # 127.0.0.1 — 1С на этом же сервере. При 0.0.0.0 защита только паролем,
-    # трафик не шифруется — по возможности ограничьте порт файрволом.
+    # 127.0.0.1 — 1С на этом же сервере. При 0.0.0.0 доступ открыт всем адресам:
+    # по возможности ограничьте порт файрволом.
     ports: ["${PG_BIND:-127.0.0.1}:${PG_PORT:-5432}:5432"]
-    volumes: [pgdata:/var/lib/postgresql/data]
+    volumes: [pgdata:/var/lib/postgresql/data, "./certs:/certs:ro"]
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-toir}"]

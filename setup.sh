@@ -126,10 +126,17 @@ show_credentials() {
     row "База" "$(get_env POSTGRES_DB)"
     row "Пользователь" "$(get_env TOIR_1C_USER)"
     row "Пароль" "$B$(get_env TOIR_1C_PASSWORD)$N"
+    row "Шифрование" "SSL включён, sslmode=require"
     row "Период получения данных" "5 минут"
     say ""
     say "  Запрос чтения:"
     say "    SELECT tag, value, value_text, ts FROM v_toir_1c;"
+    say ""
+    say "  Сертификат самоподписанный: sslmode=verify-full не пройдёт, у сервера"
+    say "  нет доменного имени. Чтобы 1С проверяла сервер, а не просто шифровала"
+    say "  канал, скопируйте на машину с 1С файл"
+    say "    $(pwd)/certs/server.crt"
+    say "  в %APPDATA%\\postgresql\\root.crt и поставьте sslmode=verify-ca."
     say ""
     warn "Пароль показан только здесь. Передайте его интегратору и не публикуйте."
 }
@@ -169,7 +176,8 @@ install() {
     else
         bind=0.0.0.0
         warn "Порт Postgres будет открыт для всех адресов."
-        say  "  Защита — только пароль, и он идёт по сети без шифрования."
+        say  "  Трафик до 1С шифруется (SSL), но подобрать пароль может любой,"
+        say  "  кто нашёл порт сканером."
         say  "  Если у 1С постоянный IP, сузьте доступ:"
         say  "    ufw allow OpenSSH && ufw allow from IP_1C to any port PORT proto tcp && ufw enable"
     fi
@@ -299,4 +307,6 @@ menu() {
 }
 
 require_docker
+# До любого `docker compose up`: без сертификата Postgres с ssl=on не стартует.
+./certgen.sh
 if [ -f .env ]; then menu; else install; fi

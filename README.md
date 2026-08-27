@@ -39,9 +39,13 @@ bash -c "$(curl -fsSL https://raw.githubusercontent.com/melikramin/compressor-to
 
 ```bash
 cp .env.example .env      # заполнить API_KEY и оба пароля
+./certgen.sh              # сертификат для SSL, без него Postgres не стартует
 docker compose up -d --build
 docker compose logs -f sync        # ждём «такт ок: N тегов»
 ```
+
+Подключение 1С шифруется: в настройках подключения `sslmode=require`. Подробнее
+— [`INSTALL.md`](INSTALL.md#шифрование).
 
 ## Проверка
 
@@ -92,6 +96,7 @@ docker compose run --rm --no-deps sync sh -c "pip install -q pytest && python -m
 | `sync/status.py` | состояние службы для человека, за ним `./status.sh` |
 | `setup.sh` | установка и меню обслуживания: ключ, адрес платформы, реквизиты |
 | `install.sh` | установка с нуля: Docker, git clone, запуск `setup.sh` |
+| `certgen.sh` | самоподписанный сертификат для SSL, идемпотентно |
 
 Схема БД повторяет `toir.v_toir_1c` платформы колонка в колонку, поэтому запрос
 чтения в 1С один и тот же — что к облаку, что к локальной копии.
